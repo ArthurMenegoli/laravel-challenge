@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 
 use App\Event;
 
+use Validator;
+
 class EventController extends Controller
 {
     public function index() {
@@ -16,21 +18,30 @@ class EventController extends Controller
     
     public function store(Request $request) {
 
-        try {
-            $event = new Event();
-            $event->title = $request->title;
-            $event->description = $request->description;
-            $event->begin_date = $request->begin_date;
-            $event->close_date = $request->close_date;
-            
-            $event->save();
+        $data = $request->all();
 
-            return ['returne' => 'Evento criado com sucesso!'];
-        } 
-        catch (\Exception $erro) {
-            return ['returne'=> 'erro', 'details'=>dd($erro)];
+        $validator = Validator::make($data, [
+            'title' => 'required|max:191',
+            'description' => 'required',
+            'begin_date' => 'required',
+            'close_date' => 'required'
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'message' => 'Há campos sem preenchimento!',
+                'errors' => $validator->errors()->all()
+            ], 422);
         }
-    
+
+        $event = new Event();
+        $event->fill($data);
+        $event->save();
+
+        return response([$event,
+            'message' => 'O evento foi criado com sucesso!'
+        ], 200);
+            
     }
 
     public function todayEvents() {
@@ -58,5 +69,34 @@ class EventController extends Controller
             }
         }
         return response()->json($arrEvents);
+    }
+
+    public function update(Request $request, $id) {
+
+        $event = Event::find($id);
+
+        if(!$event){
+            return respose()->json(['message' => 'Não existem registro desse evento.'], 404);
+        }
+        else {
+            echo($event->fill($request->all()));
+            $event->save();
+    
+            return response()->json($event);
+        }
+        
+    }
+
+    public function destroy ($id) {
+        $event = Event::find($id);
+
+        if(!$event){
+            return response()->json(['message' => 'Não existem registro desse evento.'], 404);
+        }
+        else {
+            $event->delete();
+
+            return response()->json(['message' => 'Evento removido com sucesso!'], 200);
+        }
     }
 }

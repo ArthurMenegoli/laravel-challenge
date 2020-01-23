@@ -24,4 +24,6 @@ Route::namespace('Api')->group(function() {
     Route::post('/events/new', 'EventController@store');
     Route::get('/events/upcoming', 'EventController@upcomingEvents');
     Route::get('/events/today', 'EventController@todayEvents');
+    Route::put('/events/{id}', 'EventController@update');
+    Route::delete('/events/{id}', 'EventController@destroy');    
 });
